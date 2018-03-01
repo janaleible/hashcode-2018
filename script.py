@@ -74,6 +74,8 @@ class Vehicle:
         self.postition = Intersection(0, 0)
         self.time_to_destination = 0
         self.picked_ride = None
+        self.empty_rides = 0
+        self.boni = 0
 
     def tick(self, ride_pool: [], time: int):
 
@@ -88,9 +90,16 @@ class Vehicle:
 
     def commit_tick(self, time: int):
         if self.picked_ride:
-            self.time_to_destination = self.picked_ride.pickup_distance(self.postition) + max(0, self.picked_ride.vehicle_waiting_time(time, self.postition))
+            self.time_to_destination = \
+                self.picked_ride.pickup_distance(self.postition) \
+                + max(0, self.picked_ride.vehicle_waiting_time(time, self.postition)) \
+                + self.picked_ride.ride_distance()
+
             self.postition = self.picked_ride.end
             self.rides.append(self.picked_ride)
+            self.empty_rides += self.picked_ride.pickup_distance(self.postition) \
+                + max(0, self.picked_ride.vehicle_waiting_time(time, self.postition))
+            self.boni += (self.picked_ride.vehicle_waiting_time(time, self.postition) >= 0)
             self.picked_ride = None
 
 with open(file_name, 'r') as file:
@@ -120,6 +129,9 @@ fleet = []
 for i in range(fleet_size):
     fleet.append(Vehicle())
 
+empty_rides = 0
+boni = 0
+
 for time in range(timesteps):
 
     if time % 100 == 0: print('time {}'.format(time))
@@ -128,4 +140,12 @@ for time in range(timesteps):
         vehicle.tick(ride_pool, time)
         vehicle.commit_tick(time)
 
+for vehicle in fleet:
+    empty_rides += vehicle.empty_rides
+    boni += vehicle.boni
+
 write_to_file(file_name.split('.')[0] + '.out', fleet)
+
+print('unserved rides: {}'.format(len(ride_pool)))
+print('empty rides: {}'.format(empty_rides / fleet_size))
+print('boni: {}'.format(boni / (number_of_rides - len(ride_pool ))))
