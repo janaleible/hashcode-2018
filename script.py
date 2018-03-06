@@ -53,17 +53,17 @@ class Ride:
         return time + pickup_distance + ride_distance < self.window.end_by
 
     def vehicle_waiting_time(self, time, vehicle_position):
-        return self.window.start_at - time + self.pickup_distance(vehicle_position)
+        return abs(self.window.start_at - time + self.pickup_distance(vehicle_position))
 
     def priority(self, time: int, vehicle_position: Intersection) -> float:
 
         pickup_distance = self.pickup_distance(vehicle_position)
         vehicle_waiting_time = self.vehicle_waiting_time(time, vehicle_position)
-        gives_bouns = (vehicle_waiting_time >= 0)
+        gives_bonus = (vehicle_waiting_time >= 0)
 
         return vehicle_waiting_weight * vehicle_waiting_time \
                + pickup_distance_weight * pickup_distance \
-               - bonus_weight * gives_bouns
+               - bonus_weight * gives_bonus
 
 
 class Vehicle:
