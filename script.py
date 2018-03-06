@@ -1,4 +1,10 @@
-file_name = 'b_should_be_easy.in'
+import sys
+
+file_name = sys.argv[1]
+vehicle_waiting_weight = float(sys.argv[2])
+pickup_distance_weight = float(sys.argv[3])
+bonus_weight = float(sys.argv[4])
+
 
 def write_to_file(filename, fleet):
     rides = ''
@@ -8,13 +14,9 @@ def write_to_file(filename, fleet):
             rides += ' ' + str(ride.id)
         rides += '\n'
 
-    with open(filename, 'w') as file:
+    with open('output/{}.out'.format(filename), 'w') as file:
         file.write(rides)
 
-class Grid:
-    def __init__(self, rows: int, columns: int):
-        self.rows = rows
-        self.columns = columns
 
 class Intersection:
     def __init__(self, row: int, column: int):
@@ -24,10 +26,12 @@ class Intersection:
     def distance(self, other) -> int:
         return abs(self.row - other.row) + abs(self.column - other.column)
 
+
 class Window:
     def __init__(self, start_at: int, end_by: int):
         self.start_at = start_at
         self.end_by = end_by
+
 
 class Ride:
     def __init__(self, id, start: Intersection, end: Intersection, window: Window):
@@ -53,10 +57,6 @@ class Ride:
 
     def priority(self, time: int, vehicle_position: Intersection) -> float:
 
-        vehicle_waiting_weight = 0.5
-        pickup_distance_weight = 0.5
-        bonus_weight = 0.5
-
         pickup_distance = self.pickup_distance(vehicle_position)
         vehicle_waiting_time = self.vehicle_waiting_time(time, vehicle_position)
         gives_bouns = (vehicle_waiting_time >= 0)
@@ -64,8 +64,6 @@ class Ride:
         return vehicle_waiting_weight * vehicle_waiting_time \
                + pickup_distance_weight * pickup_distance \
                - bonus_weight * gives_bouns
-
-
 
 
 class Vehicle:
@@ -102,12 +100,11 @@ class Vehicle:
             self.boni += (self.picked_ride.vehicle_waiting_time(time, self.postition) >= 0)
             self.picked_ride = None
 
-with open(file_name, 'r') as file:
+with open('input/{}.in'.format(file_name), 'r') as file:
     lines = file.readlines()
 
     metadata = [int(d) for d in lines[0].split(' ')]
 
-    grid = Grid(metadata[0], metadata[1])
     fleet_size = metadata[2]
     number_of_rides = metadata[3]
     bonus = metadata[4]
@@ -134,8 +131,6 @@ boni = 0
 
 for time in range(timesteps):
 
-    if time % 100 == 0: print('time {}'.format(time))
-
     for vehicle in fleet:
         vehicle.tick(ride_pool, time)
         vehicle.commit_tick(time)
@@ -144,8 +139,13 @@ for vehicle in fleet:
     empty_rides += vehicle.empty_rides
     boni += vehicle.boni
 
-write_to_file(file_name.split('.')[0] + '.out', fleet)
+write_to_file('{}-{}-{}-{}'.format(file_name, vehicle_waiting_weight, pickup_distance_weight, bonus_weight), fleet)
 
-print('unserved rides: {}'.format(len(ride_pool)))
-print('empty rides: {}'.format(empty_rides / fleet_size))
-print('boni: {}'.format(boni / (number_of_rides - len(ride_pool ))))
+meta = '{}: {}, {}, {}\n'.format(file_name, vehicle_waiting_weight, pickup_distance_weight, bonus_weight) \
+       + 'unserved rides: {}\n'.format(len(ride_pool)) \
+       + 'empty rides: {}\n'.format(empty_rides / fleet_size) \
+       +'boni percentage: {}\n'.format((boni / (number_of_rides - len(ride_pool ))) * 100) \
+       + '---------------------\n\n'
+
+with open('output/meta.txt', 'a') as file:
+    file.write(meta)
