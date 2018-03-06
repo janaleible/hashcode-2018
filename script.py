@@ -69,7 +69,7 @@ class Ride:
 class Vehicle:
     def __init__(self):
         self.rides =[]
-        self.postition = Intersection(0, 0)
+        self.position = Intersection(0, 0)
         self.time_to_destination = 0
         self.picked_ride = None
         self.empty_rides = 0
@@ -80,24 +80,24 @@ class Vehicle:
         if self.time_to_destination > 0:
             self.time_to_destination -= 1
         else:
-            valid_rides = list(filter(lambda ride: ride.valid_ride(time, self.postition), ride_pool))
+            valid_rides = list(filter(lambda ride: ride.valid_ride(time, self.position), ride_pool))
 
             if len(valid_rides) > 0:
-                self.picked_ride = sorted(valid_rides, key=lambda ride: ride.priority(time, self.postition))[0]
+                self.picked_ride = sorted(valid_rides, key=lambda ride: ride.priority(time, self.position))[0]
                 ride_pool.remove(self.picked_ride)
 
     def commit_tick(self, time: int):
         if self.picked_ride:
             self.time_to_destination = \
-                self.picked_ride.pickup_distance(self.postition) \
-                + max(0, self.picked_ride.vehicle_waiting_time(time, self.postition)) \
+                self.picked_ride.pickup_distance(self.position) \
+                + max(0, self.picked_ride.vehicle_waiting_time(time, self.position)) \
                 + self.picked_ride.ride_distance()
 
-            self.postition = self.picked_ride.end
+            self.position = self.picked_ride.end
             self.rides.append(self.picked_ride)
-            self.empty_rides += self.picked_ride.pickup_distance(self.postition) \
-                + max(0, self.picked_ride.vehicle_waiting_time(time, self.postition))
-            self.boni += (self.picked_ride.vehicle_waiting_time(time, self.postition) >= 0)
+            self.empty_rides += self.picked_ride.pickup_distance(self.position) \
+                + max(0, self.picked_ride.vehicle_waiting_time(time, self.position))
+            self.boni += (self.picked_ride.vehicle_waiting_time(time, self.position) >= 0)
             self.picked_ride = None
 
 with open('input/{}.in'.format(file_name), 'r') as file:
